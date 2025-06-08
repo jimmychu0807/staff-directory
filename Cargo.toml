@@ -1,6 +1,21 @@
 [package]
 name = "directory-rs"
 version = "0.1.0"
+authors = ["Jimmy Chu <jimmychu0807@gmail.com>"]
 edition = "2024"
+description = "Staff Directory Application written in Rust"
+license = "MIT"
+repository = "https://github.com/jimmychu0807/directory-rs"
+readme = "README.md"
+keywords = ["cli", "app", "directory"]
+
+[profile.release]
+opt-level = 3
+lto = true
+debug = false
+
+[profile.dev]
+opt-level = 0
+debug = true
 
 [dependencies]
