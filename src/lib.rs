@@ -1,5 +1,5 @@
 use crossterm::{
-    ExecutableCommand,
+    ExecutableCommand, cursor,
     event::{self, Event, KeyCode},
     terminal::{self, disable_raw_mode, enable_raw_mode},
 };
@@ -29,24 +29,31 @@ impl MenuItem for ListDepartments {
     }
 }
 
-fn display_menu<T: MenuItem>(menu_items: &Vec<T>) {
-    println!("What do you want to do?");
+fn display_menu<T: MenuItem>(
+    menu_items: &[T],
+    stdout: &mut io::Stdout,
+) -> Result<(), Box<dyn error::Error>> {
+    print!("What do you want to do?");
+    stdout.execute(cursor::MoveToNextLine(1))?;
 
     for (idx, item) in menu_items.iter().enumerate() {
-        println!("{}. {}", idx + 1, item.menuitem_txt());
+        print!("{}. {}", idx + 1, item.menuitem_txt());
+        stdout.execute(cursor::MoveToNextLine(1))?;
     }
+
+    Ok(())
 }
 
 pub fn run() -> Result<(), Box<dyn error::Error>> {
     let mut stdout = io::stdout();
-    stdout.execute(terminal::Clear(terminal::ClearType::All))?;
 
+    stdout.execute(terminal::EnterAlternateScreen)?;
     enable_raw_mode()?;
 
     let menu_items = vec![ListDepartments::new()];
 
     loop {
-        display_menu(&menu_items);
+        display_menu(&menu_items, &mut stdout)?;
 
         if let Event::Key(event) = event::read()? {
             match event.code {
@@ -57,6 +64,7 @@ pub fn run() -> Result<(), Box<dyn error::Error>> {
     }
 
     disable_raw_mode()?;
+    stdout.execute(terminal::LeaveAlternateScreen)?;
 
     Ok(())
 }
