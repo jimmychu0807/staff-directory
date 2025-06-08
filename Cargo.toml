@@ -9,6 +9,9 @@ repository = "https://github.com/jimmychu0807/directory-rs"
 readme = "README.md"
 keywords = ["cli", "app", "directory"]
 
+[dependencies]
+crossterm = "^0.29"
+
 [profile.release]
 opt-level = 3
 lto = true
@@ -17,5 +20,3 @@ debug = false
 [profile.dev]
 opt-level = 0
 debug = true
-
-[dependencies]
