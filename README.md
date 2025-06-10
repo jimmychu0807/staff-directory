@@ -71,3 +71,7 @@ What do you want to do?
 ```
 
 - Pressing `Esc` key can always cancel the action and go back one level up.
+
+# Questions to think about
+
+- Currently you are using trait object to implement menu_item and its execution. Will it be better to use a struct type directly to implement menu_item and a function pointer that accept different kind of execution implementation?

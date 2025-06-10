@@ -1,19 +1,13 @@
-use crate::traits::MenuItem;
+pub struct DepartmentId(pub u32);
 
-pub struct ListDepartments();
-
-impl ListDepartments {
-	pub fn new() -> Self {
-		Self()
-	}
+pub struct Department {
+	pub id: DepartmentId,
+	pub name: String,
+	pub parent: Option<DepartmentId>,
 }
 
-impl MenuItem for ListDepartments {
-	fn menuitem_txt(&self) -> &str {
-		"List department hierarchy"
-	}
-
-	fn execute(&self) {
-		println!("executing ListDepartments");
+impl Department {
+	pub fn new(id: DepartmentId, name: &str, parent: Option<DepartmentId>) -> Self {
+		Self { id, name: name.to_string(), parent }
 	}
 }
