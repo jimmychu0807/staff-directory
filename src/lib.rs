@@ -5,12 +5,15 @@ use std::{
 	io::{self, Write},
 };
 
+pub mod context;
 pub mod department;
+pub mod menu_items;
 pub mod staff;
-pub mod traits;
 
-use crate::department::{CreateDepartment, ListDepartments};
-use crate::traits::MenuItem;
+use crate::{
+	context::Context,
+	menu_items::{CreateDepartment, ListDepartments, MenuItem, NameCompany},
+};
 
 fn display_menu(menu_items: &[Box<dyn MenuItem>]) -> Result<(), Box<dyn error::Error>> {
 	println!("What do you want to do?");
@@ -26,8 +29,13 @@ fn display_menu(menu_items: &[Box<dyn MenuItem>]) -> Result<(), Box<dyn error::E
 }
 
 pub fn run() -> Result<(), Box<dyn error::Error>> {
-	let menu_items: Vec<Box<dyn MenuItem>> =
-		vec![Box::new(ListDepartments::new()), Box::new(CreateDepartment::new())];
+	let mut ctx = Context::new();
+
+	let menu_items: Vec<Box<dyn MenuItem>> = vec![
+		Box::new(NameCompany::new()),
+		Box::new(ListDepartments::new()),
+		Box::new(CreateDepartment::new()),
+	];
 	let re_digits = Regex::new(r"\d+$")?;
 
 	loop {
@@ -41,7 +49,7 @@ pub fn run() -> Result<(), Box<dyn error::Error>> {
 			t if re_digits.is_match(t) => {
 				// Have to minus 1 from user input, as internally it is zero-offset.
 				match t.parse::<usize>()?.checked_sub(1) {
-					Some(choice) if choice < menu_items.len() => menu_items[choice].execute(),
+					Some(choice) if choice < menu_items.len() => menu_items[choice].execute(&mut ctx),
 					_ => println!("Invalid choice"),
 				}
 			}
