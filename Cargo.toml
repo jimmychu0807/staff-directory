@@ -10,7 +10,7 @@ readme = "README.md"
 keywords = ["cli", "app", "directory"]
 
 [dependencies]
-crossterm = "^0.29"
+regex = "^1.11.1"
 
 [profile.release]
 opt-level = 3

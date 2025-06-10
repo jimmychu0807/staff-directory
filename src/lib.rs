@@ -1,70 +1,52 @@
-use crossterm::{
-    ExecutableCommand, cursor,
-    event::{self, Event, KeyCode},
-    terminal::{self, disable_raw_mode, enable_raw_mode},
+use regex::Regex;
+use std::{
+	error,
+	io::{self, Write},
 };
 
-use std::{error, io};
+pub mod department;
+pub mod staff;
+pub mod traits;
 
-pub trait MenuItem {
-    fn menuitem_txt(&self) -> &str;
-    fn execute(&self);
-}
+use crate::department::ListDepartments;
+use crate::traits::MenuItem;
 
-pub struct ListDepartments();
+fn display_menu<T: MenuItem>(menu_items: &[T]) -> Result<(), Box<dyn error::Error>> {
+	println!("What do you want to do?");
 
-impl ListDepartments {
-    fn new() -> Self {
-        Self()
-    }
-}
+	for (idx, item) in menu_items.iter().enumerate() {
+		println!("{}. {}", idx + 1, item.menuitem_txt());
+	}
 
-impl MenuItem for ListDepartments {
-    fn menuitem_txt(&self) -> &str {
-        "List department hierarchy"
-    }
+	print!("? ");
+	let _ = io::stdout().flush();
 
-    fn execute(&self) {
-        println!("executing ListDepartments");
-    }
-}
-
-fn display_menu<T: MenuItem>(
-    menu_items: &[T],
-    stdout: &mut io::Stdout,
-) -> Result<(), Box<dyn error::Error>> {
-    print!("What do you want to do?");
-    stdout.execute(cursor::MoveToNextLine(1))?;
-
-    for (idx, item) in menu_items.iter().enumerate() {
-        print!("{}. {}", idx + 1, item.menuitem_txt());
-        stdout.execute(cursor::MoveToNextLine(1))?;
-    }
-
-    Ok(())
+	Ok(())
 }
 
 pub fn run() -> Result<(), Box<dyn error::Error>> {
-    let mut stdout = io::stdout();
+	let menu_items = vec![ListDepartments::new()];
+	let re_digits = Regex::new(r"\d+$")?;
 
-    stdout.execute(terminal::EnterAlternateScreen)?;
-    enable_raw_mode()?;
+	loop {
+		display_menu(&menu_items)?;
 
-    let menu_items = vec![ListDepartments::new()];
+		let mut input = String::new();
+		io::stdin().read_line(&mut input)?;
+		let input_str: &str = &input.trim();
 
-    loop {
-        display_menu(&menu_items, &mut stdout)?;
+		match input_str {
+			t if re_digits.is_match(t) => {
+				// Have to minus 1 from user input, as internally it is zero-offset.
+				match t.parse::<usize>()?.checked_sub(1) {
+					Some(choice) if choice < menu_items.len() => menu_items[choice].execute(),
+					_ => println!("Invalid choice"),
+				}
+			}
+			"q" => break,
+			_ => continue,
+		};
+	}
 
-        if let Event::Key(event) = event::read()? {
-            match event.code {
-                KeyCode::Esc | KeyCode::Char('q') => break,
-                _ => {}
-            }
-        }
-    }
-
-    disable_raw_mode()?;
-    stdout.execute(terminal::LeaveAlternateScreen)?;
-
-    Ok(())
+	Ok(())
 }
