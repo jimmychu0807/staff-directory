@@ -1,18 +1,17 @@
-use std::{
-	error, io::{ self, Write }
-};
 use regex::Regex;
+use std::{
+	error,
+	io::{self, Write},
+};
 
 pub mod department;
-pub mod traits;
 pub mod staff;
+pub mod traits;
 
 use crate::department::ListDepartments;
 use crate::traits::MenuItem;
 
-fn display_menu<T: MenuItem>(
-	menu_items: &[T]
-) -> Result<(), Box<dyn error::Error>> {
+fn display_menu<T: MenuItem>(menu_items: &[T]) -> Result<(), Box<dyn error::Error>> {
 	println!("What do you want to do?");
 
 	for (idx, item) in menu_items.iter().enumerate() {
