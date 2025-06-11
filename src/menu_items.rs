@@ -1,6 +1,12 @@
+use regex::Regex;
 use std::{error, io};
 
-use crate::{context::Context, department::Department};
+use crate::{
+	context::Context,
+	department::{Department, DepartmentId},
+	errors::ApplicationError,
+	traits::OneLiner,
+};
 
 pub trait MenuItem {
 	fn menuitem_txt(&self) -> &str;
@@ -69,7 +75,7 @@ impl MenuItem for ListDepartments {
 		println!("{}", ctx.company_name());
 
 		for department in ctx.departments() {
-			println!("  └ {}", department.name());
+			println!("  └ {}", department.one_liner());
 		}
 
 		Ok(())
@@ -106,17 +112,25 @@ impl MenuItem for CreateDepartment {
 		let name = name.trim();
 
 		println!(
-			"Does this department has a parent department?\n(Press \"Enter\" for none, or enter the department ID for department name.)"
+			"Does this department has a parent department?\n(Press \"Enter\" for none, or enter the department ID)"
 		);
+
+		let re_digits = Regex::new(r"\d+$")?;
+
 		let mut parent_dep = String::new();
 		io::stdin().read_line(&mut parent_dep)?;
-		let parent_dep = parent_dep.trim();
+		let parent_dep = match parent_dep.trim() {
+			"" => None,
+			id if re_digits.is_match(id) => Some(DepartmentId(id.parse::<u32>()?)),
+			_ => {
+				return Err(Box::new(ApplicationError(
+					"Do not support specifying department name as parent for now".to_string(),
+				)));
+			}
+		};
+		// TODO: validate the entered ID
 
-		let new_department = Department::new(
-			ctx.get_next_department_id(),
-			name,
-			None, // work on this
-		);
+		let new_department = Department::new(ctx.get_next_department_id(), name, parent_dep);
 
 		ctx.insert_department(new_department);
 
