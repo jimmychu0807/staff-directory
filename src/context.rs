@@ -1,9 +1,16 @@
+use getset::{Getters, Setters};
+
 use crate::department::{Department, DepartmentId};
 use crate::staff::Staff;
 
+#[derive(Clone, Debug, Getters, Setters)]
 pub struct Context {
+	#[getset(get = "pub", set = "pub")]
 	company_name: String,
+
 	next_department_id: DepartmentId,
+
+	#[getset(get = "pub")]
 	departments: Vec<Department>,
 	staff: Vec<Staff>,
 }
@@ -16,5 +23,16 @@ impl Context {
 			departments: vec![],
 			staff: vec![],
 		}
+	}
+
+	pub fn get_next_department_id(&mut self) -> DepartmentId {
+		let ret = self.next_department_id.clone();
+		self.next_department_id = DepartmentId(self.next_department_id.0 + 1);
+
+		ret
+	}
+
+	pub fn insert_department(&mut self, new_department: Department) {
+		self.departments.push(new_department);
 	}
 }

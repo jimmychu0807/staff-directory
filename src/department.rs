@@ -1,9 +1,18 @@
+use getset::{Getters, Setters};
+
+#[derive(Clone, Debug)]
 pub struct DepartmentId(pub u32);
 
+#[derive(Clone, Debug, Getters, Setters)]
 pub struct Department {
-	pub id: DepartmentId,
-	pub name: String,
-	pub parent: Option<DepartmentId>,
+	#[getset(get = "pub")]
+	id: DepartmentId,
+
+	#[getset(get = "pub")]
+	name: String,
+
+	#[getset(get = "pub")]
+	parent: Option<DepartmentId>,
 }
 
 impl Department {

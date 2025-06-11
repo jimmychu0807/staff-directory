@@ -1,15 +1,16 @@
-use crate::context::Context;
+use std::{error, io};
+
+use crate::{context::Context, department::Department};
 
 pub trait MenuItem {
 	fn menuitem_txt(&self) -> &str;
-	fn hotkey(&self) -> &str;
-	fn execute(&self, ctx: &mut Context);
+	fn hotkey(&self) -> Option<&str>;
+	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>>;
 }
 
 /**
  * NameCompany
  **/
-
 pub struct NameCompany {
 	menuitem_txt: String,
 	hotkey: String,
@@ -26,19 +27,24 @@ impl MenuItem for NameCompany {
 		&self.menuitem_txt
 	}
 
-	fn hotkey(&self) -> &str {
-		&self.hotkey
+	fn hotkey(&self) -> Option<&str> {
+		Some(&self.hotkey)
 	}
 
-	fn execute(&self, ctx: &mut Context) {
-		println!("Naming the company");
+	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
+		println!("What is the new name of the company?");
+
+		let mut input = String::new();
+		io::stdin().read_line(&mut input)?;
+		ctx.set_company_name(input.trim().to_string());
+
+		Ok(())
 	}
 }
 
 /**
  * ListDepartments
  **/
-
 pub struct ListDepartments {
 	menuitem_txt: String,
 	hotkey: String,
@@ -55,19 +61,24 @@ impl MenuItem for ListDepartments {
 		&self.menuitem_txt
 	}
 
-	fn hotkey(&self) -> &str {
-		&self.hotkey
+	fn hotkey(&self) -> Option<&str> {
+		Some(&self.hotkey)
 	}
 
-	fn execute(&self, ctx: &mut Context) {
-		println!("listing departments");
+	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
+		println!("{}", ctx.company_name());
+
+		for department in ctx.departments() {
+			println!("  └ {}", department.name());
+		}
+
+		Ok(())
 	}
 }
 
 /**
  * CreateDepartment
  **/
-
 pub struct CreateDepartment {
 	menuitem_txt: String,
 	hotkey: String,
@@ -84,11 +95,57 @@ impl MenuItem for CreateDepartment {
 		&self.menuitem_txt
 	}
 
-	fn hotkey(&self) -> &str {
-		&self.hotkey
+	fn hotkey(&self) -> Option<&str> {
+		Some(&self.hotkey)
 	}
 
-	fn execute(&self, ctx: &mut Context) {
-		println!("create a new department");
+	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
+		println!("What's the name of the new department?");
+		let mut name = String::new();
+		io::stdin().read_line(&mut name)?;
+		let name = name.trim();
+
+		println!(
+			"Does this department has a parent department?\n(Press \"Enter\" for none, or enter the department ID for department name.)"
+		);
+		let mut parent_dep = String::new();
+		io::stdin().read_line(&mut parent_dep)?;
+		let parent_dep = parent_dep.trim();
+
+		let new_department = Department::new(
+			ctx.get_next_department_id(),
+			name,
+			None, // work on this
+		);
+
+		ctx.insert_department(new_department);
+
+		Ok(())
+	}
+}
+
+/**
+ * PrintContext
+ **/
+pub struct PrintContext();
+
+impl PrintContext {
+	pub fn new() -> Self {
+		Self()
+	}
+}
+
+impl MenuItem for PrintContext {
+	fn menuitem_txt(&self) -> &str {
+		"Print application context (debug)"
+	}
+
+	fn hotkey(&self) -> Option<&str> {
+		None
+	}
+
+	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
+		println!("{:#?}", ctx);
+		Ok(())
 	}
 }

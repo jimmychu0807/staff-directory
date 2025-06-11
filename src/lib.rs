@@ -12,14 +12,22 @@ pub mod staff;
 
 use crate::{
 	context::Context,
-	menu_items::{CreateDepartment, ListDepartments, MenuItem, NameCompany},
+	menu_items::{CreateDepartment, ListDepartments, MenuItem, NameCompany, PrintContext},
 };
 
 fn display_menu(menu_items: &[Box<dyn MenuItem>]) -> Result<(), Box<dyn error::Error>> {
 	println!("What do you want to do?");
 
 	for (idx, item) in menu_items.iter().enumerate() {
-		println!("{}. {:25}         [{}]", idx + 1, item.menuitem_txt(), item.hotkey());
+		println!(
+			"{}. {:40}{}",
+			idx + 1,
+			item.menuitem_txt(),
+			match item.hotkey() {
+				Some(ks) => format!("[{ks}]"),
+				None => "".to_string(),
+			}
+		);
 	}
 
 	print!("? ");
@@ -35,6 +43,8 @@ pub fn run() -> Result<(), Box<dyn error::Error>> {
 		Box::new(NameCompany::new()),
 		Box::new(ListDepartments::new()),
 		Box::new(CreateDepartment::new()),
+		#[cfg(debug_assertions)]
+		Box::new(PrintContext::new()),
 	];
 	let re_digits = Regex::new(r"\d+$")?;
 
@@ -48,10 +58,16 @@ pub fn run() -> Result<(), Box<dyn error::Error>> {
 		match input_str {
 			t if re_digits.is_match(t) => {
 				// Have to minus 1 from user input, as internally it is zero-offset.
-				match t.parse::<usize>()?.checked_sub(1) {
+				let _ = match t.parse::<usize>()?.checked_sub(1) {
 					Some(choice) if choice < menu_items.len() => menu_items[choice].execute(&mut ctx),
-					_ => println!("Invalid choice"),
-				}
+					_ => {
+						println!("Invalid choice");
+						Ok(())
+					}
+				};
+
+				// Append one more newline at the end
+				println!();
 			}
 			"q" => break,
 			_ => continue,
