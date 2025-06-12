@@ -115,23 +115,19 @@ impl MenuItem for CreateDepartment {
 			"Does this department has a parent department?\n(Press \"Enter\" for none, or enter the department ID)"
 		);
 
-		let re_digits = Regex::new(r"\d+$")?;
-
 		let mut parent_dep = String::new();
 		io::stdin().read_line(&mut parent_dep)?;
-		let parent_dep = match parent_dep.trim() {
-			"" => None,
-			id if re_digits.is_match(id) => Some(DepartmentId(id.parse::<u32>()?)),
-			_ => {
-				return Err(Box::new(ApplicationError(
-					"Do not support specifying department name as parent for now".to_string(),
-				)));
+
+		let maybe_parent_dep_id = if parent_dep.trim() == "" {
+			None
+		} else {
+			match DepartmentId::try_from(parent_dep.trim())? {
+				dep_id if ctx.validate_department_id(&dep_id) => Some(dep_id),
+				_ => return Err(Box::new(ApplicationError("Unknown department".to_string()))),
 			}
 		};
-		// TODO: validate the entered ID
 
-		let new_department = Department::new(ctx.get_next_department_id(), name, parent_dep);
-
+		let new_department = Department::new(ctx.get_next_department_id(), name, maybe_parent_dep_id);
 		ctx.insert_department(new_department);
 
 		Ok(())
