@@ -7,8 +7,10 @@ use std::{
 
 pub mod context;
 pub mod department;
+pub mod errors;
 pub mod menu_items;
 pub mod staff;
+pub mod traits;
 
 use crate::{
 	context::Context,
@@ -58,13 +60,18 @@ pub fn run() -> Result<(), Box<dyn error::Error>> {
 		match input_str {
 			t if re_digits.is_match(t) => {
 				// Have to minus 1 from user input, as internally it is zero-offset.
-				let _ = match t.parse::<usize>()?.checked_sub(1) {
+				let result = match t.parse::<usize>()?.checked_sub(1) {
 					Some(choice) if choice < menu_items.len() => menu_items[choice].execute(&mut ctx),
 					_ => {
 						println!("Invalid choice");
 						Ok(())
 					}
 				};
+
+				// Print error out, if any
+				if let Err(err) = result {
+					println!("{}", err);
+				}
 
 				// Append one more newline at the end
 				println!();

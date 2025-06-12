@@ -35,4 +35,8 @@ impl Context {
 	pub fn insert_department(&mut self, new_department: Department) {
 		self.departments.push(new_department);
 	}
+
+	pub fn validate_department_id(&self, dep_id: &DepartmentId) -> bool {
+		self.departments.iter().any(|dep| dep.id() == dep_id)
+	}
 }

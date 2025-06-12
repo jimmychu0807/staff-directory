@@ -1,6 +1,12 @@
+use regex::Regex;
 use std::{error, io};
 
-use crate::{context::Context, department::Department};
+use crate::{
+	context::Context,
+	department::{Department, DepartmentId},
+	errors::ApplicationError,
+	traits::OneLiner,
+};
 
 pub trait MenuItem {
 	fn menuitem_txt(&self) -> &str;
@@ -69,7 +75,7 @@ impl MenuItem for ListDepartments {
 		println!("{}", ctx.company_name());
 
 		for department in ctx.departments() {
-			println!("  └ {}", department.name());
+			println!("  └ {}", department.one_liner());
 		}
 
 		Ok(())
@@ -106,18 +112,22 @@ impl MenuItem for CreateDepartment {
 		let name = name.trim();
 
 		println!(
-			"Does this department has a parent department?\n(Press \"Enter\" for none, or enter the department ID for department name.)"
+			"Does this department has a parent department?\n(Press \"Enter\" for none, or enter the department ID)"
 		);
+
 		let mut parent_dep = String::new();
 		io::stdin().read_line(&mut parent_dep)?;
-		let parent_dep = parent_dep.trim();
 
-		let new_department = Department::new(
-			ctx.get_next_department_id(),
-			name,
-			None, // work on this
-		);
+		let maybe_parent_dep_id = if parent_dep.trim() == "" {
+			None
+		} else {
+			match DepartmentId::try_from(parent_dep.trim())? {
+				dep_id if ctx.validate_department_id(&dep_id) => Some(dep_id),
+				_ => return Err(Box::new(ApplicationError("Unknown department".to_string()))),
+			}
+		};
 
+		let new_department = Department::new(ctx.get_next_department_id(), name, maybe_parent_dep_id);
 		ctx.insert_department(new_department);
 
 		Ok(())
