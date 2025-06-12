@@ -26,7 +26,7 @@ impl Context {
 	}
 
 	pub fn get_next_department_id(&mut self) -> DepartmentId {
-		let ret = self.next_department_id.clone();
+		let ret = self.next_department_id;
 		self.next_department_id = DepartmentId(self.next_department_id.0 + 1);
 
 		ret

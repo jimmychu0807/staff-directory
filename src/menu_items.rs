@@ -1,4 +1,3 @@
-use regex::Regex;
 use std::{error, io};
 
 use crate::{
@@ -60,6 +59,20 @@ impl ListDepartments {
 	pub fn new() -> Self {
 		Self { menuitem_txt: "List department hierarchy".to_string(), hotkey: "ld".to_string() }
 	}
+
+	fn department_and_children_one_liners(&self, ctx: &Context, dep: &Department, level: u32) -> String {
+		let mut result: String = format!("{}L {}\n", "  ".repeat(level as usize), dep.one_liner());
+
+		let dep_str = ctx
+			.departments()
+			.iter()
+			.filter(|d| *d.parent() == Some(*dep.id()))
+			.map(|d| self.department_and_children_one_liners(ctx, d, level + 1))
+			.fold(String::new(), |acc, line| acc + &line); // this is the way to concatenate two strings with a return value, if we don't want to use format!() macro call.
+
+		result.push_str(&dep_str);
+		result
+	}
 }
 
 impl MenuItem for ListDepartments {
@@ -72,12 +85,18 @@ impl MenuItem for ListDepartments {
 	}
 
 	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
-		println!("{}", ctx.company_name());
+		let mut result = format!("{}\n", ctx.company_name());
 
-		for department in ctx.departments() {
-			println!("  └ {}", department.one_liner());
-		}
+		let dep_str = ctx
+			.departments()
+			.iter()
+			.filter(|dep| dep.parent().is_none())
+			.map(|dep| self.department_and_children_one_liners(ctx, dep, 0))
+			.fold(String::new(), |acc, line| acc + &line); // this is the way to concatenate two strings with a return value, if we don't want to use format!() macro call.
 
+		result.push_str(&dep_str);
+
+		println!("{}", result);
 		Ok(())
 	}
 }
