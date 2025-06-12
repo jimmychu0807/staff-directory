@@ -1,7 +1,7 @@
 use crate::traits::OneLiner;
 use getset::{Getters, Setters};
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct DepartmentId(pub u32);
 
 impl From<u32> for DepartmentId {

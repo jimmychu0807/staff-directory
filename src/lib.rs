@@ -55,7 +55,7 @@ pub fn run() -> Result<(), Box<dyn error::Error>> {
 
 		let mut input = String::new();
 		io::stdin().read_line(&mut input)?;
-		let input_str: &str = &input.trim();
+		let input_str = input.trim();
 
 		match input_str {
 			t if re_digits.is_match(t) => {
