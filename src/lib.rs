@@ -14,7 +14,7 @@ pub mod traits;
 
 use crate::{
 	context::Context,
-	menu_items::{CreateDepartment, ListDepartments, MenuItem, NameCompany, PrintContext},
+	menu_items::{CreateDepartment, ListDepartments, MenuItem, NameCompany, PrintContext, ShowDepartment},
 };
 
 fn display_menu(menu_items: &[Box<dyn MenuItem>]) -> Result<(), Box<dyn error::Error>> {
@@ -45,6 +45,7 @@ pub fn run() -> Result<(), Box<dyn error::Error>> {
 		Box::new(NameCompany::new()),
 		Box::new(ListDepartments::new()),
 		Box::new(CreateDepartment::new()),
+		Box::new(ShowDepartment::new()),
 		#[cfg(debug_assertions)]
 		Box::new(PrintContext::new()),
 	];
