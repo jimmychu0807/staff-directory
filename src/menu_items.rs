@@ -9,7 +9,7 @@ use crate::{
 
 pub trait MenuItem {
 	fn menuitem_txt(&self) -> &str;
-	fn hotkey(&self) -> Option<&str>;
+	fn shortcut(&self) -> Option<&str>;
 	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>>;
 }
 
@@ -18,12 +18,12 @@ pub trait MenuItem {
  **/
 pub struct NameCompany {
 	menuitem_txt: String,
-	hotkey: String,
+	shortcut: String,
 }
 
 impl NameCompany {
 	pub fn new() -> Self {
-		Self { menuitem_txt: "Name the company".to_string(), hotkey: "n".to_string() }
+		Self { menuitem_txt: "Name the company".to_string(), shortcut: "n".to_string() }
 	}
 }
 
@@ -32,8 +32,8 @@ impl MenuItem for NameCompany {
 		&self.menuitem_txt
 	}
 
-	fn hotkey(&self) -> Option<&str> {
-		Some(&self.hotkey)
+	fn shortcut(&self) -> Option<&str> {
+		Some(&self.shortcut)
 	}
 
 	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
@@ -52,12 +52,12 @@ impl MenuItem for NameCompany {
  **/
 pub struct ListDepartments {
 	menuitem_txt: String,
-	hotkey: String,
+	shortcut: String,
 }
 
 impl ListDepartments {
 	pub fn new() -> Self {
-		Self { menuitem_txt: "List department hierarchy".to_string(), hotkey: "ld".to_string() }
+		Self { menuitem_txt: "List department hierarchy".to_string(), shortcut: "ld".to_string() }
 	}
 
 	fn department_and_children_one_liners(&self, ctx: &Context, dep: &Department, level: u32) -> String {
@@ -80,8 +80,8 @@ impl MenuItem for ListDepartments {
 		&self.menuitem_txt
 	}
 
-	fn hotkey(&self) -> Option<&str> {
-		Some(&self.hotkey)
+	fn shortcut(&self) -> Option<&str> {
+		Some(&self.shortcut)
 	}
 
 	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
@@ -106,12 +106,12 @@ impl MenuItem for ListDepartments {
  **/
 pub struct CreateDepartment {
 	menuitem_txt: String,
-	hotkey: String,
+	shortcut: String,
 }
 
 impl CreateDepartment {
 	pub fn new() -> Self {
-		Self { menuitem_txt: "Create a new department".to_string(), hotkey: "cd".to_string() }
+		Self { menuitem_txt: "Create a new department".to_string(), shortcut: "cd".to_string() }
 	}
 }
 
@@ -120,8 +120,8 @@ impl MenuItem for CreateDepartment {
 		&self.menuitem_txt
 	}
 
-	fn hotkey(&self) -> Option<&str> {
-		Some(&self.hotkey)
+	fn shortcut(&self) -> Option<&str> {
+		Some(&self.shortcut)
 	}
 
 	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
@@ -158,18 +158,12 @@ impl MenuItem for CreateDepartment {
  **/
 pub struct ShowDepartment();
 
-impl ShowDepartment {
-	pub fn new() -> Self {
-		Self()
-	}
-}
-
 impl MenuItem for ShowDepartment {
 	fn menuitem_txt(&self) -> &str {
 		"Show department information"
 	}
 
-	fn hotkey(&self) -> Option<&str> {
+	fn shortcut(&self) -> Option<&str> {
 		Some("rd")
 	}
 
@@ -195,23 +189,76 @@ impl MenuItem for ShowDepartment {
  **/
 pub struct PrintContext();
 
-impl PrintContext {
-	pub fn new() -> Self {
-		Self()
-	}
-}
-
 impl MenuItem for PrintContext {
 	fn menuitem_txt(&self) -> &str {
 		"Print application context (debug)"
 	}
 
-	fn hotkey(&self) -> Option<&str> {
+	fn shortcut(&self) -> Option<&str> {
 		None
 	}
 
 	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
 		println!("{:#?}", ctx);
 		Ok(())
+	}
+}
+
+/**
+ * Save Context
+ **/
+pub struct SaveContext();
+
+impl MenuItem for SaveContext {
+	fn menuitem_txt(&self) -> &str {
+		"Save to a file"
+	}
+
+	fn shortcut(&self) -> Option<&str> {
+		Some("s")
+	}
+
+	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
+		println!("{:#?}", ctx);
+		Ok(())
+	}
+}
+
+/**
+ * Load Context
+ **/
+pub struct LoadContext();
+
+impl MenuItem for LoadContext {
+	fn menuitem_txt(&self) -> &str {
+		"Load from a file"
+	}
+
+	fn shortcut(&self) -> Option<&str> {
+		Some("l")
+	}
+
+	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
+		println!("{:#?}", ctx);
+		Ok(())
+	}
+}
+
+/**
+ * Quit
+ **/
+pub struct Quit();
+
+impl MenuItem for Quit {
+	fn menuitem_txt(&self) -> &str {
+		"Quit"
+	}
+
+	fn shortcut(&self) -> Option<&str> {
+		Some("q")
+	}
+
+	fn execute(&self, _: &mut Context) -> Result<(), Box<dyn error::Error>> {
+		std::process::exit(0);
 	}
 }
