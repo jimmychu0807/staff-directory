@@ -154,6 +154,43 @@ impl MenuItem for CreateDepartment {
 }
 
 /**
+ * ShowDepartment
+ **/
+pub struct ShowDepartment();
+
+impl ShowDepartment {
+	pub fn new() -> Self {
+		Self()
+	}
+}
+
+impl MenuItem for ShowDepartment {
+	fn menuitem_txt(&self) -> &str {
+		"Show department information"
+	}
+
+	fn hotkey(&self) -> Option<&str> {
+		Some("rd")
+	}
+
+	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
+		let max_input = Into::<u32>::into(*ctx.next_department_id()) - 1;
+		println!("Which department do you want to show? (0 - {})", max_input);
+
+		let mut input = String::new();
+		io::stdin().read_line(&mut input)?;
+
+		if let Some(dep_info) = ctx.department_info(&DepartmentId(input.trim().parse::<u32>()?)) {
+			println!("{}", dep_info);
+		} else {
+			return Err(Box::new(ApplicationError("Unknown department".to_string())));
+		}
+
+		Ok(())
+	}
+}
+
+/**
  * PrintContext
  **/
 pub struct PrintContext();

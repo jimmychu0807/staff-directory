@@ -42,7 +42,7 @@ struct Staff {
   age: u32,
   gender: Gender,
   department: Option<DepartmentId>,
-  salary: u64,
+  salary: u32,
 }
 ```
 

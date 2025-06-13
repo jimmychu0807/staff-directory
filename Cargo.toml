@@ -21,3 +21,6 @@ debug = false
 [profile.dev]
 opt-level = 0
 debug = true
+
+[lints.clippy]
+new_without_default = "allow"
