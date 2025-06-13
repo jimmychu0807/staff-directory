@@ -62,9 +62,11 @@ pub fn run() -> Result<(), Box<dyn error::Error>> {
 				// Append one more newline at the end
 				println!();
 			}
-			t if t.len() > 0 => {
+			t if !t.is_empty() => {
 				if let Some(mi) = get_menu_item_from_shortcut(&menu_items, t) {
 					let _ = mi.execute(&mut ctx);
+				} else {
+					println!("Invalid shortcut");
 				}
 			}
 			_ => continue,
@@ -75,7 +77,6 @@ pub fn run() -> Result<(), Box<dyn error::Error>> {
 /**
  * Un-export / internal helper methods below
  **/
-
 fn display_menu(menu_items: &[Box<dyn MenuItem>]) -> Result<(), Box<dyn error::Error>> {
 	println!("What do you want to do?");
 
@@ -98,6 +99,14 @@ fn get_menu_item_from_shortcut<'a>(
 	menu_items: &'a Vec<Box<dyn MenuItem>>,
 	shortcut: &'a str,
 ) -> Option<&'a Box<dyn MenuItem>> {
-	// TODO: implment the logic here
-	Some(&menu_items[0])
+	if shortcut.is_empty() {
+		return None;
+	}
+
+	menu_items
+		.iter()
+		.filter(|mi| mi.shortcut().map_or("", |sc| sc) == shortcut)
+		.collect::<Vec<_>>()
+		.first()
+		.map(|v| *v)
 }
