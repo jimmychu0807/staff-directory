@@ -1,4 +1,4 @@
-use std::{error, io};
+use std::{error, fs, io, path::Path};
 
 use crate::{
 	context::Context,
@@ -219,8 +219,14 @@ impl MenuItem for SaveContext {
 	}
 
 	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
-		println!("{:#?}", ctx);
-		Ok(())
+		println!("What file path do you want to save to?");
+		let mut filepath = String::new();
+		io::stdin().read_line(&mut filepath)?;
+		let filepath = filepath.trim();
+		let path = Path::new(&filepath);
+
+		let serialized = serde_json::to_string(ctx)?;
+		fs::write(path, serialized).map_err(|e| e.into())
 	}
 }
 

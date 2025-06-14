@@ -1,9 +1,10 @@
 use getset::{Getters, Setters};
+use serde::{Deserialize, Serialize};
 
 use crate::department::{Department, DepartmentId, DepartmentInfo};
 use crate::staff::Staff;
 
-#[derive(Clone, Debug, Getters, Setters)]
+#[derive(Clone, Debug, Getters, Setters, Serialize, Deserialize)]
 pub struct Context {
 	#[getset(get = "pub", set = "pub")]
 	company_name: String,

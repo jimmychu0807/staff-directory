@@ -1,8 +1,9 @@
 use crate::traits::OneLiner;
 use getset::{Getters, Setters};
+use serde::{Deserialize, Serialize};
 use std::fmt;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DepartmentId(pub u32);
 
 impl From<u32> for DepartmentId {
@@ -29,7 +30,7 @@ impl TryFrom<&str> for DepartmentId {
 /**
  * For Department type
  **/
-#[derive(Clone, Debug, Getters, Setters)]
+#[derive(Clone, Debug, Getters, Setters, Serialize, Deserialize)]
 pub struct Department {
 	#[getset(get = "pub")]
 	id: DepartmentId,
