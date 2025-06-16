@@ -60,14 +60,14 @@ impl ListDepartments {
 		Self { menuitem_txt: "List department hierarchy".to_string(), shortcut: "ld".to_string() }
 	}
 
-	fn department_and_children_one_liners(&self, ctx: &Context, dep: &Department, level: u32) -> String {
+	fn department_and_children_one_liners(ctx: &Context, dep: &Department, level: u32) -> String {
 		let mut result: String = format!("{}L {}\n", "  ".repeat(level as usize), dep.one_liner());
 
 		let dep_str = ctx
 			.departments()
 			.iter()
 			.filter(|d| *d.parent() == Some(*dep.id()))
-			.map(|d| self.department_and_children_one_liners(ctx, d, level + 1))
+			.map(|d| Self::department_and_children_one_liners(ctx, d, level + 1))
 			.fold(String::new(), |acc, line| acc + &line); // this is the way to concatenate two strings with a return value, if we don't want to use format!() macro call.
 
 		result.push_str(&dep_str);
@@ -91,7 +91,7 @@ impl MenuItem for ListDepartments {
 			.departments()
 			.iter()
 			.filter(|dep| dep.parent().is_none())
-			.map(|dep| self.department_and_children_one_liners(ctx, dep, 0))
+			.map(|dep| Self::department_and_children_one_liners(ctx, dep, 0))
 			.fold(String::new(), |acc, line| acc + &line); // this is the way to concatenate two strings with a return value, if we don't want to use format!() macro call.
 
 		result.push_str(&dep_str);

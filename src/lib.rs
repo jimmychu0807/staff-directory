@@ -1,8 +1,10 @@
+use clap::Parser;
 use regex::Regex;
 use std::{
 	boxed::Box,
-	error,
+	error, fs,
 	io::{self, Write},
+	path::PathBuf,
 };
 
 pub mod context;
@@ -20,20 +22,40 @@ use crate::{
 	},
 };
 
-pub fn run() -> Result<(), Box<dyn error::Error>> {
-	let mut ctx = Context::new();
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+pub struct Cli {
+	data_file: Option<PathBuf>,
 
-	let menu_items: Vec<Box<dyn MenuItem>> = vec![
+	#[arg(short, long, default_value_t = false)]
+	debug: bool,
+}
+
+pub fn run(cli: Option<Cli>) -> Result<(), Box<dyn error::Error>> {
+	// load the context if specified
+	let mut ctx = if cli.is_none() || cli.as_ref().unwrap().data_file.is_none() {
+		Context::new()
+	} else {
+		let data_filepath = cli.as_ref().unwrap().data_file.as_ref().unwrap();
+		let content = fs::read_to_string(data_filepath)?;
+		serde_json::from_str::<Context>(&content).unwrap()
+	};
+
+	let debug = cli.as_ref().unwrap().debug;
+
+	let mut menu_items: Vec<Box<dyn MenuItem>> = vec![
 		Box::new(NameCompany::new()),
 		Box::new(ListDepartments::new()),
 		Box::new(CreateDepartment::new()),
 		Box::new(ShowDepartment()),
 		Box::new(SaveContext()),
 		Box::new(LoadContext()),
-		#[cfg(debug_assertions)]
-		Box::new(PrintContext()),
-		Box::new(Quit()),
 	];
+	if debug {
+		menu_items.push(Box::new(PrintContext()));
+	}
+	menu_items.push(Box::new(Quit()));
+
 	let re_digits = Regex::new(r"\d+$")?;
 
 	loop {
@@ -72,6 +94,10 @@ pub fn run() -> Result<(), Box<dyn error::Error>> {
 			_ => continue,
 		};
 	}
+}
+
+pub fn parse() -> Cli {
+	Cli::parse()
 }
 
 /**
