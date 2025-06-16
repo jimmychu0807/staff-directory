@@ -219,7 +219,7 @@ impl MenuItem for SaveContext {
 	}
 
 	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
-		println!("What file path do you want to save to?");
+		println!("Which file path to save to?");
 		let mut filepath = String::new();
 		io::stdin().read_line(&mut filepath)?;
 		let filepath = filepath.trim();
@@ -245,7 +245,16 @@ impl MenuItem for LoadContext {
 	}
 
 	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
-		println!("{:#?}", ctx);
+		println!("Which file path to load from?");
+
+		let mut filepath = String::new();
+		io::stdin().read_line(&mut filepath)?;
+
+		let data_filepath = Path::new(filepath.trim());
+		let content = fs::read_to_string(data_filepath)?;
+
+		*ctx = serde_json::from_str::<Context>(&content)?;
+
 		Ok(())
 	}
 }

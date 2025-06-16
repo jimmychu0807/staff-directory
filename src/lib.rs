@@ -38,7 +38,7 @@ pub fn run(cli: Option<Cli>) -> Result<(), Box<dyn error::Error>> {
 	} else {
 		let data_filepath = cli.as_ref().unwrap().data_file.as_ref().unwrap();
 		let content = fs::read_to_string(data_filepath)?;
-		serde_json::from_str::<Context>(&content).unwrap()
+		serde_json::from_str::<Context>(&content)?
 	};
 
 	let debug = cli.as_ref().unwrap().debug;
