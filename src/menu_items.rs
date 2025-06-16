@@ -60,14 +60,14 @@ impl ListDepartments {
 		Self { menuitem_txt: "List department hierarchy".to_string(), shortcut: "ld".to_string() }
 	}
 
-	fn department_and_children_one_liners(&self, ctx: &Context, dep: &Department, level: u32) -> String {
+	fn department_and_children_one_liners(ctx: &Context, dep: &Department, level: u32) -> String {
 		let mut result: String = format!("{}L {}\n", "  ".repeat(level as usize), dep.one_liner());
 
 		let dep_str = ctx
 			.departments()
 			.iter()
 			.filter(|d| *d.parent() == Some(*dep.id()))
-			.map(|d| self.department_and_children_one_liners(ctx, d, level + 1))
+			.map(|d| Self::department_and_children_one_liners(ctx, d, level + 1))
 			.fold(String::new(), |acc, line| acc + &line); // this is the way to concatenate two strings with a return value, if we don't want to use format!() macro call.
 
 		result.push_str(&dep_str);
@@ -91,7 +91,7 @@ impl MenuItem for ListDepartments {
 			.departments()
 			.iter()
 			.filter(|dep| dep.parent().is_none())
-			.map(|dep| self.department_and_children_one_liners(ctx, dep, 0))
+			.map(|dep| Self::department_and_children_one_liners(ctx, dep, 0))
 			.fold(String::new(), |acc, line| acc + &line); // this is the way to concatenate two strings with a return value, if we don't want to use format!() macro call.
 
 		result.push_str(&dep_str);
@@ -219,7 +219,7 @@ impl MenuItem for SaveContext {
 	}
 
 	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
-		println!("What file path do you want to save to?");
+		println!("Which file path to save to?");
 		let mut filepath = String::new();
 		io::stdin().read_line(&mut filepath)?;
 		let filepath = filepath.trim();
@@ -245,7 +245,16 @@ impl MenuItem for LoadContext {
 	}
 
 	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
-		println!("{:#?}", ctx);
+		println!("Which file path to load from?");
+
+		let mut filepath = String::new();
+		io::stdin().read_line(&mut filepath)?;
+
+		let data_filepath = Path::new(filepath.trim());
+		let content = fs::read_to_string(data_filepath)?;
+
+		*ctx = serde_json::from_str::<Context>(&content)?;
+
 		Ok(())
 	}
 }
