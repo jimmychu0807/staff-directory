@@ -10,7 +10,26 @@ use crate::{
 pub trait MenuItem {
 	fn menuitem_txt(&self) -> &str;
 	fn shortcut(&self) -> Option<&str>;
-	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>>;
+	fn execute_interactive(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>>;
+	fn execute(
+		&self,
+		ctx: &mut Context,
+		input: MenuItemInput,
+	) -> Result<MenuItemOutput, Box<dyn error::Error>>;
+}
+
+#[derive(Debug)]
+pub enum MenuItemInput {
+	String(String),
+	DepartmentInfo(String, Option<DepartmentId>),
+	None,
+}
+
+#[derive(Debug)]
+pub enum MenuItemOutput {
+	String(String),
+	Department(Department),
+	None,
 }
 
 /**
@@ -36,14 +55,28 @@ impl MenuItem for NameCompany {
 		Some(&self.shortcut)
 	}
 
-	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
+	fn execute_interactive(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
 		println!("What is the new name of the company?");
 
 		let mut input = String::new();
 		io::stdin().read_line(&mut input)?;
-		ctx.set_company_name(input.trim().to_string());
 
+		let _ = self.execute(ctx, MenuItemInput::String(input.trim().to_string()))?;
 		Ok(())
+	}
+
+	fn execute(
+		&self,
+		ctx: &mut Context,
+		input: MenuItemInput,
+	) -> Result<MenuItemOutput, Box<dyn error::Error>> {
+		let MenuItemInput::String(input) = input else {
+			return Err(Box::new(ApplicationError(format!("Unrecognized input: {:?}", input))));
+		};
+
+		ctx.set_company_name(input.to_string());
+
+		Ok(MenuItemOutput::None)
 	}
 }
 
@@ -84,7 +117,20 @@ impl MenuItem for ListDepartments {
 		Some(&self.shortcut)
 	}
 
-	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
+	fn execute_interactive(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
+		let MenuItemOutput::String(result) = self.execute(ctx, MenuItemInput::None)? else {
+			return Err(Box::new(ApplicationError("Unrecognized output".to_string())));
+		};
+
+		println!("{}", result);
+		Ok(())
+	}
+
+	fn execute(
+		&self,
+		ctx: &mut Context,
+		_input: MenuItemInput,
+	) -> Result<MenuItemOutput, Box<dyn error::Error>> {
 		let mut result = format!("{}\n", ctx.company_name());
 
 		let dep_str = ctx
@@ -96,8 +142,7 @@ impl MenuItem for ListDepartments {
 
 		result.push_str(&dep_str);
 
-		println!("{}", result);
-		Ok(())
+		Ok(MenuItemOutput::String(result))
 	}
 }
 
@@ -244,18 +289,30 @@ impl MenuItem for LoadContext {
 		Some("l")
 	}
 
-	fn execute(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
+	fn execute_interactive(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
 		println!("Which file path to load from?");
 
 		let mut filepath = String::new();
 		io::stdin().read_line(&mut filepath)?;
 
-		let data_filepath = Path::new(filepath.trim());
+		self.execute(ctx, MenuItemInput::String(filepath.trim().to_string())).map(|_| ())
+	}
+
+	fn execute(
+		&self,
+		ctx: &mut Context,
+		input: MenuItemInput,
+	) -> Result<MenuItemOutput, Box<dyn error::Error>> {
+		let MenuItemInput::String(filepath) = input else {
+			return Err(Box::new(ApplicationError(format!("Unrecognized input: {:?}", input))));
+		};
+
+		let data_filepath = Path::new(&filepath);
 		let content = fs::read_to_string(data_filepath)?;
 
 		*ctx = serde_json::from_str::<Context>(&content)?;
 
-		Ok(())
+		Ok(MenuItemOutput::None)
 	}
 }
 
@@ -273,7 +330,11 @@ impl MenuItem for Quit {
 		Some("q")
 	}
 
-	fn execute(&self, _: &mut Context) -> Result<(), Box<dyn error::Error>> {
+	fn execute_interactive(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
+		self.execute(ctx, MenuItemInput::None).map(|_| ())
+	}
+
+	fn execute(&self, _: &mut Context, _: MenuItemInput) -> Result<MenuItemOutput, Box<dyn error::Error>> {
 		std::process::exit(0);
 	}
 }
