@@ -14,6 +14,8 @@ pub struct Context {
 
 	#[getset(get = "pub")]
 	departments: Vec<Department>,
+
+	#[getset(get = "pub")]
 	staff: Vec<Staff>,
 }
 
