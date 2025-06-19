@@ -181,7 +181,7 @@ impl MenuItem for CreateDepartment {
 		let mut parent_dep = String::new();
 		io::stdin().read_line(&mut parent_dep)?;
 		let parent_dep = parent_dep.trim();
-		let parent_dep = if parent_dep.len() > 0 { Some(parent_dep.to_string()) } else { None };
+		let parent_dep = if !parent_dep.is_empty() { Some(parent_dep.to_string()) } else { None };
 
 		self.execute(ctx, MenuItemInput::DepartmentParams(name.to_string(), parent_dep)).map(|_| ())
 	}
