@@ -140,7 +140,7 @@ impl MenuItem for ListDepartments {
 			.map(|dep| Self::department_and_children_one_liners(ctx, dep, 0))
 			.fold(String::new(), |acc, line| acc + &line); // this is the way to concatenate two strings with a return value, if we don't want to use format!() macro call.
 
-		result.push_str(&dep_str);
+		result.push_str(&dep_str.trim());
 
 		Ok(MenuItemOutput::String(result))
 	}
@@ -260,6 +260,54 @@ impl MenuItem for ShowDepartment {
 		};
 
 		Ok(MenuItemOutput::DepartmentInfo(dep_info))
+	}
+}
+
+pub struct ListStaff();
+
+impl MenuItem for ListStaff {
+	fn menuitem_txt(&self) -> &str {
+		"List all staff"
+	}
+
+	fn shortcut(&self) -> Option<&str> {
+		Some("ls")
+	}
+
+	fn execute_interactive(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
+		Ok(())
+	}
+
+	fn execute<'a>(
+		&self,
+		ctx: &'a mut Context,
+		input: MenuItemInput,
+	) -> Result<MenuItemOutput<'a>, Box<dyn error::Error>> {
+		Ok(MenuItemOutput::None)
+	}
+}
+
+pub struct CreateStaff();
+
+impl MenuItem for CreateStaff {
+	fn menuitem_txt(&self) -> &str {
+		"Create a new staff"
+	}
+
+	fn shortcut(&self) -> Option<&str> {
+		Some("cs")
+	}
+
+	fn execute_interactive(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
+		Ok(())
+	}
+
+	fn execute<'a>(
+		&self,
+		ctx: &'a mut Context,
+		input: MenuItemInput,
+	) -> Result<MenuItemOutput<'a>, Box<dyn error::Error>> {
+		Ok(MenuItemOutput::None)
 	}
 }
 

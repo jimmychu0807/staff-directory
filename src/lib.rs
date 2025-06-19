@@ -20,8 +20,8 @@ mod tests;
 use crate::{
 	context::Context,
 	menu_items::{
-		CreateDepartment, ListDepartments, LoadContext, MenuItem, NameCompany, PrintContext, Quit,
-		SaveContext, ShowDepartment,
+		CreateDepartment, CreateStaff, ListDepartments, ListStaff, LoadContext, MenuItem, NameCompany,
+		PrintContext, Quit, SaveContext, ShowDepartment,
 	},
 };
 
@@ -51,6 +51,8 @@ pub fn run(cli: Option<Cli>) -> Result<(), Box<dyn error::Error>> {
 		Box::new(ListDepartments::new()),
 		Box::new(CreateDepartment::new()),
 		Box::new(ShowDepartment()),
+		Box::new(ListStaff()),
+		Box::new(CreateStaff()),
 		Box::new(SaveContext()),
 		Box::new(LoadContext()),
 	];
