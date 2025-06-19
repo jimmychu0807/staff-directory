@@ -1,11 +1,11 @@
 [package]
-name = "directory-rs"
+name = "staff-directory"
 version = "0.1.0"
 authors = ["Jimmy Chu <jimmychu0807@gmail.com>"]
 edition = "2024"
 description = "Staff Directory Application written in Rust"
 license = "MIT"
-repository = "https://github.com/jimmychu0807/directory-rs"
+repository = "https://github.com/jimmychu0807/staff-directory"
 readme = "README.md"
 keywords = ["cli", "app", "directory"]
 

@@ -54,6 +54,7 @@ impl OneLiner for Department {
 	}
 }
 
+#[derive(Debug)]
 pub struct DepartmentInfo<'a> {
 	pub department: &'a Department,
 	pub headcount: u32,

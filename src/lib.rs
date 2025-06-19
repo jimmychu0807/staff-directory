@@ -14,6 +14,9 @@ pub mod menu_items;
 pub mod staff;
 pub mod traits;
 
+#[cfg(test)]
+mod tests;
+
 use crate::{
 	context::Context,
 	menu_items::{
@@ -69,7 +72,9 @@ pub fn run(cli: Option<Cli>) -> Result<(), Box<dyn error::Error>> {
 			t if re_digits.is_match(t) => {
 				// Have to minus 1 from user input, as internally it is zero-offset.
 				let result = match t.parse::<usize>()?.checked_sub(1) {
-					Some(choice) if choice < menu_items.len() => menu_items[choice].execute(&mut ctx),
+					Some(choice) if choice < menu_items.len() => {
+						menu_items[choice].execute_interactive(&mut ctx)
+					}
 					_ => {
 						println!("Invalid choice");
 						Ok(())
@@ -86,7 +91,7 @@ pub fn run(cli: Option<Cli>) -> Result<(), Box<dyn error::Error>> {
 			}
 			t if !t.is_empty() => {
 				if let Some(mi) = get_menu_item_from_shortcut(&menu_items, t) {
-					let _ = mi.execute(&mut ctx);
+					let _ = mi.execute_interactive(&mut ctx);
 				} else {
 					println!("Invalid shortcut");
 				}
