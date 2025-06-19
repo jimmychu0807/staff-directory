@@ -108,17 +108,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
-name = "directory-rs"
-version = "0.1.0"
-dependencies = [
- "clap",
- "getset",
- "regex",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "getset"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -265,6 +254,17 @@ dependencies = [
  "memchr",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "staff-directory"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "getset",
+ "regex",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
