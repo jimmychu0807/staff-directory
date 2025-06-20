@@ -2,7 +2,7 @@ use std::{error, fs, io, path::Path};
 
 use crate::{
 	context::Context,
-	department::{Department, DepartmentId, DepartmentInfo},
+	department::{Department, DepartmentBuilder, DepartmentId, DepartmentInfo},
 	errors::ApplicationError,
 	traits::OneLiner,
 };
@@ -21,13 +21,14 @@ pub trait MenuItem {
 #[derive(Debug)]
 pub enum MenuItemInput {
 	String(String),
-	DepartmentParams(String, Option<String>),
+	DepartmentBuilder(DepartmentBuilder),
 	None,
 }
 
 #[derive(Debug)]
 pub enum MenuItemOutput<'a> {
 	String(String),
+	Department(&'a Department),
 	DepartmentInfo(DepartmentInfo<'a>),
 	None,
 }
@@ -140,7 +141,7 @@ impl MenuItem for ListDepartments {
 			.map(|dep| Self::department_and_children_one_liners(ctx, dep, 0))
 			.fold(String::new(), |acc, line| acc + &line); // this is the way to concatenate two strings with a return value, if we don't want to use format!() macro call.
 
-		result.push_str(&dep_str.trim());
+		result.push_str(dep_str.trim());
 
 		Ok(MenuItemOutput::String(result))
 	}
@@ -173,17 +174,18 @@ impl MenuItem for CreateDepartment {
 		println!("What's the name of the new department?");
 		let mut name = String::new();
 		io::stdin().read_line(&mut name)?;
-		let name = name.trim();
+		let name = name.trim().to_string();
 
 		println!(
 			"Does this department has a parent department?\n(Press \"Enter\" for none, or enter the department ID)"
 		);
-		let mut parent_dep = String::new();
-		io::stdin().read_line(&mut parent_dep)?;
-		let parent_dep = parent_dep.trim();
-		let parent_dep = if !parent_dep.is_empty() { Some(parent_dep.to_string()) } else { None };
+		let mut parent = String::new();
+		io::stdin().read_line(&mut parent)?;
+		let parent = parent.trim();
+		let parent =
+			if !parent.is_empty() { Some(<DepartmentId as TryFrom<&str>>::try_from(parent)?) } else { None };
 
-		self.execute(ctx, MenuItemInput::DepartmentParams(name.to_string(), parent_dep)).map(|_| ())
+		self.execute(ctx, MenuItemInput::DepartmentBuilder(DepartmentBuilder::new(name, parent))).map(|_| ())
 	}
 
 	fn execute<'a>(
@@ -191,27 +193,12 @@ impl MenuItem for CreateDepartment {
 		ctx: &'a mut Context,
 		input: MenuItemInput,
 	) -> Result<MenuItemOutput<'a>, Box<dyn error::Error>> {
-		let MenuItemInput::DepartmentParams(name, parent_dep_id) = input else {
+		let MenuItemInput::DepartmentBuilder(builder) = input else {
 			Err(Box::new(ApplicationError("Unrecognized input".to_string())))?
 		};
 
-		let parent_dep_id = match parent_dep_id {
-			Some(parent_dep_id) => {
-				let parent_dep_id = <DepartmentId as TryFrom<&str>>::try_from(&parent_dep_id)?;
-
-				if ctx.validate_department_id(&parent_dep_id) {
-					Some(parent_dep_id)
-				} else {
-					Err(Box::new(ApplicationError("Unknown department".to_string())))?
-				}
-			}
-			None => None,
-		};
-
-		let new_department = Department::new(ctx.get_next_department_id(), &name, parent_dep_id);
-		ctx.insert_department(new_department);
-
-		Ok(MenuItemOutput::None)
+		let dep = ctx.insert_department(builder)?;
+		Ok(MenuItemOutput::Department(dep))
 	}
 }
 

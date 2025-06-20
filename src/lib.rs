@@ -131,7 +131,7 @@ fn display_menu(menu_items: &[Box<dyn MenuItem>]) -> Result<(), Box<dyn error::E
 fn get_menu_item_from_shortcut<'a>(
 	menu_items: &'a [Box<dyn MenuItem>],
 	shortcut: &'a str,
-) -> Option<&'a Box<dyn MenuItem>> {
+) -> Option<&'a dyn MenuItem> {
 	if shortcut.is_empty() {
 		return None;
 	}
@@ -141,5 +141,5 @@ fn get_menu_item_from_shortcut<'a>(
 		.filter(|mi| mi.shortcut().map_or("", |sc| sc) == shortcut)
 		.collect::<Vec<_>>()
 		.first()
-		.map(|bv| &**bv)
+		.map(|bv| &***bv)
 }
