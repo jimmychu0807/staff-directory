@@ -9,7 +9,7 @@ use crate::{
 	context::Context,
 	department::{Department, DepartmentBuilder, DepartmentId, DepartmentInfo},
 	errors::ApplicationError,
-	staff::Gender,
+	staff::{Gender, Staff, StaffBuilder},
 	traits::OneLiner,
 };
 
@@ -24,17 +24,17 @@ pub trait MenuItem {
 	) -> Result<MenuItemOutput<'a>, Box<dyn error::Error>>;
 }
 
-#[derive(Debug)]
 pub enum MenuItemInput {
 	String(String),
 	DepartmentBuilder(DepartmentBuilder),
+	StaffBuilder(StaffBuilder),
 	None,
 }
 
-#[derive(Debug)]
 pub enum MenuItemOutput<'a> {
 	String(String),
 	Department(&'a Department),
+	Staff(&'a Staff),
 	DepartmentInfo(DepartmentInfo<'a>),
 	None,
 }
@@ -78,7 +78,7 @@ impl MenuItem for NameCompany {
 		input: MenuItemInput,
 	) -> Result<MenuItemOutput<'a>, Box<dyn error::Error>> {
 		let MenuItemInput::String(input) = input else {
-			Err(Box::new(ApplicationError(format!("Unrecognized input: {:?}", input))))?
+			Err(Box::new(ApplicationError("Unrecognized input".to_string())))?
 		};
 
 		ctx.set_company_name(input.to_string());
@@ -305,7 +305,7 @@ impl MenuItem for CreateStaff {
 			io::stdout().flush().unwrap();
 			io::stdin().read_line(&mut first_name)?;
 			first_name = first_name.trim().to_string();
-			if first_name.len() > 0 {
+			if !first_name.is_empty() {
 				break;
 			}
 			first_name.clear();
@@ -317,7 +317,7 @@ impl MenuItem for CreateStaff {
 			io::stdout().flush().unwrap();
 			io::stdin().read_line(&mut last_name)?;
 			last_name = last_name.trim().to_string();
-			if last_name.len() > 0 {
+			if !last_name.is_empty() {
 				break;
 			}
 			last_name.clear();
@@ -329,7 +329,7 @@ impl MenuItem for CreateStaff {
 			io::stdout().flush().unwrap();
 			io::stdin().read_line(&mut email)?;
 			email = email.trim().to_string();
-			if email.len() > 0 {
+			if !email.is_empty() {
 				break;
 			}
 			email.clear();
@@ -341,29 +341,28 @@ impl MenuItem for CreateStaff {
 		loop {
 			print!("Date of birth: ");
 			io::stdout().flush().unwrap();
+			date_str.clear();
 			io::stdin().read_line(&mut date_str)?;
 			if let Ok(d) = NaiveDate::parse_from_str(date_str.trim(), "%Y-%m-%d") {
 				dob = d;
 				break;
 			}
 			println!("Please enter a valid date in YYYY-MM-DD format");
-			date_str.clear();
 		}
 
 		let doj;
 		loop {
 			print!("Date of joining: ");
 			io::stdout().flush().unwrap();
+			date_str.clear();
 			io::stdin().read_line(&mut date_str)?;
 			if let Ok(d) = NaiveDate::parse_from_str(date_str.trim(), "%Y-%m-%d") {
 				doj = d;
 				break;
 			}
 			println!("Please enter a valid date in YYYY-MM-DD format");
-			date_str.clear();
 		}
 
-		// NX: get to gender
 		let mut input_str = String::new();
 		let gender;
 		loop {
@@ -399,9 +398,29 @@ impl MenuItem for CreateStaff {
 			println!("Invalid input. Please enter depId or leave it empty");
 		}
 
-		// NX> work on salary
+		let monthly_salary;
+		loop {
+			input_str.clear();
 
-		Ok(())
+			print!("Monthly salary (leave it empty if not known): ");
+			io::stdout().flush().unwrap();
+			io::stdin().read_line(&mut input_str)?;
+			let input = input_str.trim();
+
+			if input.is_empty() {
+				monthly_salary = None;
+				break;
+			} else if let Ok(s) = input.parse::<u32>() {
+				monthly_salary = Some(s);
+				break;
+			}
+			println!("Invalid input. Please enter an integer or leave it empty");
+		}
+
+		let builder =
+			StaffBuilder { first_name, last_name, email, dob, doj, gender, department: dep, monthly_salary };
+
+		self.execute(ctx, MenuItemInput::StaffBuilder(builder)).map(|_| ())
 	}
 
 	fn execute<'a>(
@@ -409,7 +428,11 @@ impl MenuItem for CreateStaff {
 		ctx: &'a mut Context,
 		input: MenuItemInput,
 	) -> Result<MenuItemOutput<'a>, Box<dyn error::Error>> {
-		Ok(MenuItemOutput::None)
+		let MenuItemInput::StaffBuilder(builder) = input else {
+			Err(ApplicationError("Unrecognized input".to_string()))?
+		};
+
+		Ok(ctx.insert_staff(builder).map(MenuItemOutput::Staff)?)
 	}
 }
 
@@ -473,7 +496,7 @@ impl MenuItem for SaveContext {
 		input: MenuItemInput,
 	) -> Result<MenuItemOutput<'a>, Box<dyn error::Error>> {
 		let MenuItemInput::String(filepath) = input else {
-			Err(Box::new(ApplicationError(format!("Unrecognized input: {:?}", input))))?
+			Err(Box::new(ApplicationError("Unrecognized input".to_string())))?
 		};
 		let path = Path::new(&filepath);
 
@@ -511,7 +534,7 @@ impl MenuItem for LoadContext {
 		input: MenuItemInput,
 	) -> Result<MenuItemOutput<'a>, Box<dyn error::Error>> {
 		let MenuItemInput::String(filepath) = input else {
-			Err(Box::new(ApplicationError(format!("Unrecognized input: {:?}", input))))?
+			Err(Box::new(ApplicationError("Unrecognized input".to_string())))?
 		};
 
 		let data_filepath = Path::new(&filepath);
