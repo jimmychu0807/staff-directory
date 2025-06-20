@@ -1,9 +1,15 @@
-use std::{error, fs, io, path::Path};
+use chrono::NaiveDate;
+use std::{
+	error, fs,
+	io::{self, Write},
+	path::Path,
+};
 
 use crate::{
 	context::Context,
 	department::{Department, DepartmentBuilder, DepartmentId, DepartmentInfo},
 	errors::ApplicationError,
+	staff::{Gender, Staff, StaffBuilder},
 	traits::OneLiner,
 };
 
@@ -18,17 +24,17 @@ pub trait MenuItem {
 	) -> Result<MenuItemOutput<'a>, Box<dyn error::Error>>;
 }
 
-#[derive(Debug)]
 pub enum MenuItemInput {
 	String(String),
 	DepartmentBuilder(DepartmentBuilder),
+	StaffBuilder(StaffBuilder),
 	None,
 }
 
-#[derive(Debug)]
 pub enum MenuItemOutput<'a> {
 	String(String),
 	Department(&'a Department),
+	Staff(&'a Staff),
 	DepartmentInfo(DepartmentInfo<'a>),
 	None,
 }
@@ -72,7 +78,7 @@ impl MenuItem for NameCompany {
 		input: MenuItemInput,
 	) -> Result<MenuItemOutput<'a>, Box<dyn error::Error>> {
 		let MenuItemInput::String(input) = input else {
-			Err(Box::new(ApplicationError(format!("Unrecognized input: {:?}", input))))?
+			Err(Box::new(ApplicationError("Unrecognized input".to_string())))?
 		};
 
 		ctx.set_company_name(input.to_string());
@@ -217,7 +223,14 @@ impl MenuItem for ShowDepartment {
 	}
 
 	fn execute_interactive(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
-		let max_input = Into::<u32>::into(*ctx.next_department_id()) - 1;
+		let next_dep_id = <DepartmentId as Into<u32>>::into(*ctx.next_department_id());
+		if next_dep_id == 0 {
+			println!("No department exists yet.");
+			return Ok(());
+		}
+
+		// let max_input = Into::<u32>::into(*ctx.next_department_id()) - 1;
+		let max_input = next_dep_id - 1;
 		println!("Which department do you want to show? (0 - {})", max_input);
 
 		let mut input = String::new();
@@ -286,7 +299,128 @@ impl MenuItem for CreateStaff {
 	}
 
 	fn execute_interactive(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
-		Ok(())
+		let mut first_name = String::new();
+		loop {
+			print!("First name: ");
+			io::stdout().flush().unwrap();
+			io::stdin().read_line(&mut first_name)?;
+			first_name = first_name.trim().to_string();
+			if !first_name.is_empty() {
+				break;
+			}
+			first_name.clear();
+		}
+
+		let mut last_name = String::new();
+		loop {
+			print!("Last name: ");
+			io::stdout().flush().unwrap();
+			io::stdin().read_line(&mut last_name)?;
+			last_name = last_name.trim().to_string();
+			if !last_name.is_empty() {
+				break;
+			}
+			last_name.clear();
+		}
+
+		let mut email = String::new();
+		loop {
+			print!("Email: ");
+			io::stdout().flush().unwrap();
+			io::stdin().read_line(&mut email)?;
+			email = email.trim().to_string();
+			if !email.is_empty() {
+				break;
+			}
+			email.clear();
+		}
+
+		let mut date_str = String::new();
+
+		let dob;
+		loop {
+			print!("Date of birth: ");
+			io::stdout().flush().unwrap();
+			date_str.clear();
+			io::stdin().read_line(&mut date_str)?;
+			if let Ok(d) = NaiveDate::parse_from_str(date_str.trim(), "%Y-%m-%d") {
+				dob = d;
+				break;
+			}
+			println!("Please enter a valid date in YYYY-MM-DD format");
+		}
+
+		let doj;
+		loop {
+			print!("Date of joining: ");
+			io::stdout().flush().unwrap();
+			date_str.clear();
+			io::stdin().read_line(&mut date_str)?;
+			if let Ok(d) = NaiveDate::parse_from_str(date_str.trim(), "%Y-%m-%d") {
+				doj = d;
+				break;
+			}
+			println!("Please enter a valid date in YYYY-MM-DD format");
+		}
+
+		let mut input_str = String::new();
+		let gender;
+		loop {
+			input_str.clear();
+
+			print!("Gender (m/f): ");
+			io::stdout().flush().unwrap();
+			io::stdin().read_line(&mut input_str)?;
+
+			if let Ok(g) = Gender::try_from(input_str.trim()) {
+				gender = g;
+				break;
+			}
+			println!("Invalid input. Please enter 'm' or 'f' only");
+		}
+
+		let dep;
+		loop {
+			input_str.clear();
+
+			print!("Department (leave it empty if none): ");
+			io::stdout().flush().unwrap();
+			io::stdin().read_line(&mut input_str)?;
+			let input = input_str.trim();
+
+			if input.is_empty() {
+				dep = None;
+				break;
+			} else if let Ok(d) = input.parse::<u32>() {
+				dep = Some(DepartmentId(d));
+				break;
+			}
+			println!("Invalid input. Please enter depId or leave it empty");
+		}
+
+		let monthly_salary;
+		loop {
+			input_str.clear();
+
+			print!("Monthly salary (leave it empty if not known): ");
+			io::stdout().flush().unwrap();
+			io::stdin().read_line(&mut input_str)?;
+			let input = input_str.trim();
+
+			if input.is_empty() {
+				monthly_salary = None;
+				break;
+			} else if let Ok(s) = input.parse::<u32>() {
+				monthly_salary = Some(s);
+				break;
+			}
+			println!("Invalid input. Please enter an integer or leave it empty");
+		}
+
+		let builder =
+			StaffBuilder { first_name, last_name, email, dob, doj, gender, department: dep, monthly_salary };
+
+		self.execute(ctx, MenuItemInput::StaffBuilder(builder)).map(|_| ())
 	}
 
 	fn execute<'a>(
@@ -294,7 +428,11 @@ impl MenuItem for CreateStaff {
 		ctx: &'a mut Context,
 		input: MenuItemInput,
 	) -> Result<MenuItemOutput<'a>, Box<dyn error::Error>> {
-		Ok(MenuItemOutput::None)
+		let MenuItemInput::StaffBuilder(builder) = input else {
+			Err(ApplicationError("Unrecognized input".to_string()))?
+		};
+
+		Ok(ctx.insert_staff(builder).map(MenuItemOutput::Staff)?)
 	}
 }
 
@@ -358,7 +496,7 @@ impl MenuItem for SaveContext {
 		input: MenuItemInput,
 	) -> Result<MenuItemOutput<'a>, Box<dyn error::Error>> {
 		let MenuItemInput::String(filepath) = input else {
-			Err(Box::new(ApplicationError(format!("Unrecognized input: {:?}", input))))?
+			Err(Box::new(ApplicationError("Unrecognized input".to_string())))?
 		};
 		let path = Path::new(&filepath);
 
@@ -396,7 +534,7 @@ impl MenuItem for LoadContext {
 		input: MenuItemInput,
 	) -> Result<MenuItemOutput<'a>, Box<dyn error::Error>> {
 		let MenuItemInput::String(filepath) = input else {
-			Err(Box::new(ApplicationError(format!("Unrecognized input: {:?}", input))))?
+			Err(Box::new(ApplicationError("Unrecognized input".to_string())))?
 		};
 
 		let data_filepath = Path::new(&filepath);

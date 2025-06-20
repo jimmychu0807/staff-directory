@@ -12,6 +12,18 @@ pub enum Gender {
 	Female,
 }
 
+impl TryFrom<&str> for Gender {
+	type Error = &'static str;
+
+	fn try_from(value: &str) -> Result<Self, Self::Error> {
+		match value.to_lowercase().as_str() {
+			"m" => Ok(Gender::Male),
+			"f" => Ok(Gender::Female),
+			_ => Err("Invalid input. Please enter 'm' or 'f' only"),
+		}
+	}
+}
+
 #[derive(Clone, Debug, Getters, Setters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct Staff {
@@ -27,13 +39,13 @@ pub struct Staff {
 	dot: Option<NaiveDate>,
 	gender: Gender,
 	department: Option<DepartmentId>,
-	salary: Option<u32>,
+	monthly_salary: Option<u32>,
 	active: bool,
 }
 
 impl Staff {
 	pub fn new(id: StaffId, builder: StaffBuilder) -> Staff {
-		let StaffBuilder { first_name, last_name, email, dob, doj, dot, gender, department, salary, active } =
+		let StaffBuilder { first_name, last_name, email, dob, doj, gender, department, monthly_salary } =
 			builder;
 		Staff {
 			id,
@@ -42,11 +54,11 @@ impl Staff {
 			email,
 			dob,
 			doj,
-			dot,
+			dot: None,
 			gender,
 			department,
-			salary,
-			active: active.unwrap_or(true),
+			monthly_salary,
+			active: true,
 		}
 	}
 }
@@ -57,9 +69,7 @@ pub struct StaffBuilder {
 	pub email: String,
 	pub dob: NaiveDate,
 	pub doj: NaiveDate,
-	pub dot: Option<NaiveDate>,
 	pub gender: Gender,
 	pub department: Option<DepartmentId>,
-	pub salary: Option<u32>,
-	pub active: Option<bool>,
+	pub monthly_salary: Option<u32>,
 }
