@@ -1,4 +1,9 @@
-use std::{error, fs, io, path::Path};
+use chrono::NaiveDate;
+use std::{
+	error, fs,
+	io::{self, Write},
+	path::Path,
+};
 
 use crate::{
 	context::Context,
@@ -217,7 +222,14 @@ impl MenuItem for ShowDepartment {
 	}
 
 	fn execute_interactive(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
-		let max_input = Into::<u32>::into(*ctx.next_department_id()) - 1;
+		let next_dep_id = <DepartmentId as Into<u32>>::into(*ctx.next_department_id());
+		if next_dep_id == 0 {
+			println!("No department exists yet.");
+			return Ok(());
+		}
+
+		// let max_input = Into::<u32>::into(*ctx.next_department_id()) - 1;
+		let max_input = next_dep_id - 1;
 		println!("Which department do you want to show? (0 - {})", max_input);
 
 		let mut input = String::new();
@@ -286,6 +298,72 @@ impl MenuItem for CreateStaff {
 	}
 
 	fn execute_interactive(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
+		let mut first_name = String::new();
+		loop {
+			print!("First name: ");
+			io::stdout().flush().unwrap();
+			io::stdin().read_line(&mut first_name)?;
+			first_name = first_name.trim().to_string();
+			if first_name.len() > 0 {
+				break;
+			}
+			first_name.clear();
+		}
+
+		let mut last_name = String::new();
+		loop {
+			print!("Last name: ");
+			io::stdout().flush().unwrap();
+			io::stdin().read_line(&mut last_name)?;
+			last_name = last_name.trim().to_string();
+			if last_name.len() > 0 {
+				break;
+			}
+			last_name.clear();
+		}
+
+		let mut email = String::new();
+		loop {
+			print!("Email: ");
+			io::stdout().flush().unwrap();
+			io::stdin().read_line(&mut email)?;
+			email = email.trim().to_string();
+			if email.len() > 0 {
+				break;
+			}
+			email.clear();
+		}
+
+		let mut date_str = String::new();
+
+		let dob;
+		loop {
+			print!("Date of birth: ");
+			io::stdout().flush().unwrap();
+			io::stdin().read_line(&mut date_str)?;
+			if let Ok(d) = NaiveDate::parse_from_str(date_str.trim(), "%Y-%m-%d") {
+				dob = d;
+				break;
+			}
+			println!("Please enter a valid date in YYYY-MM-DD format");
+			date_str.clear();
+		}
+
+		let doj;
+		loop {
+			print!("Date of joining: ");
+			io::stdout().flush().unwrap();
+			io::stdin().read_line(&mut date_str)?;
+			if let Ok(d) = NaiveDate::parse_from_str(date_str.trim(), "%Y-%m-%d") {
+				doj = d;
+				break;
+			}
+			println!("Please enter a valid date in YYYY-MM-DD format");
+			date_str.clear();
+		}
+
+		// NX: get to gender
+
 		Ok(())
 	}
 
