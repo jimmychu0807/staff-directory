@@ -9,6 +9,7 @@ use crate::{
 	context::Context,
 	department::{Department, DepartmentBuilder, DepartmentId, DepartmentInfo},
 	errors::ApplicationError,
+	staff::Gender,
 	traits::OneLiner,
 };
 
@@ -363,6 +364,42 @@ impl MenuItem for CreateStaff {
 		}
 
 		// NX: get to gender
+		let mut input_str = String::new();
+		let gender;
+		loop {
+			input_str.clear();
+
+			print!("Gender (m/f): ");
+			io::stdout().flush().unwrap();
+			io::stdin().read_line(&mut input_str)?;
+
+			if let Ok(g) = Gender::try_from(input_str.trim()) {
+				gender = g;
+				break;
+			}
+			println!("Invalid input. Please enter 'm' or 'f' only");
+		}
+
+		let dep;
+		loop {
+			input_str.clear();
+
+			print!("Department (leave it empty if none): ");
+			io::stdout().flush().unwrap();
+			io::stdin().read_line(&mut input_str)?;
+			let input = input_str.trim();
+
+			if input.is_empty() {
+				dep = None;
+				break;
+			} else if let Ok(d) = input.parse::<u32>() {
+				dep = Some(DepartmentId(d));
+				break;
+			}
+			println!("Invalid input. Please enter depId or leave it empty");
+		}
+
+		// NX> work on salary
 
 		Ok(())
 	}

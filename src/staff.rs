@@ -12,6 +12,18 @@ pub enum Gender {
 	Female,
 }
 
+impl TryFrom<&str> for Gender {
+	type Error = &'static str;
+
+	fn try_from(value: &str) -> Result<Self, Self::Error> {
+		match value.to_lowercase().as_str() {
+			"m" => Ok(Gender::Male),
+			"f" => Ok(Gender::Female),
+			_ => Err("Invalid input. Please enter 'm' or 'f' only"),
+		}
+	}
+}
+
 #[derive(Clone, Debug, Getters, Setters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct Staff {
