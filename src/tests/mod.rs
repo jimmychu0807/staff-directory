@@ -1,5 +1,9 @@
 use super::*;
-use crate::{context::Context, department::DepartmentId, menu_items::MenuItemInput};
+use crate::{
+	context::Context,
+	department::{DepartmentBuilder, DepartmentId},
+	menu_items::MenuItemInput,
+};
 
 #[test]
 fn name_a_company() {
@@ -17,7 +21,7 @@ fn create_a_department() {
 	let mut ctx = Context::new();
 	let create_department: Box<dyn MenuItem> = Box::new(CreateDepartment::new());
 
-	let dept1_params = MenuItemInput::DepartmentParams("Dept1".to_string(), None);
+	let dept1_params = MenuItemInput::DepartmentBuilder(DepartmentBuilder::new("Dept1".to_string(), None));
 	let _ = create_department.execute(&mut ctx, dept1_params);
 
 	let next_dep_id = ctx.next_department_id();

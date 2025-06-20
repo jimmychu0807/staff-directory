@@ -31,26 +31,37 @@ impl TryFrom<&str> for DepartmentId {
  * For Department type
  **/
 #[derive(Clone, Debug, Getters, Setters, Serialize, Deserialize)]
+#[getset(get = "pub")]
 pub struct Department {
-	#[getset(get = "pub")]
 	id: DepartmentId,
-
-	#[getset(get = "pub")]
 	name: String,
-
-	#[getset(get = "pub")]
 	parent: Option<DepartmentId>,
+	active: bool,
 }
 
 impl Department {
-	pub fn new(id: DepartmentId, name: &str, parent: Option<DepartmentId>) -> Self {
-		Self { id, name: name.to_string(), parent }
+	pub fn new(id: DepartmentId, builder: DepartmentBuilder) -> Self {
+		let DepartmentBuilder { name, parent, active } = builder;
+		Department { id, name, parent, active: active.unwrap_or(true) }
 	}
 }
 
 impl OneLiner for Department {
 	fn one_liner(&self) -> String {
 		format!("{} department (id: {})", self.name, self.id.0)
+	}
+}
+
+#[derive(Debug)]
+pub struct DepartmentBuilder {
+	pub name: String,
+	pub parent: Option<DepartmentId>,
+	pub active: Option<bool>,
+}
+
+impl DepartmentBuilder {
+	pub fn new(name: String, parent: Option<DepartmentId>) -> Self {
+		DepartmentBuilder { name, parent, active: Some(true) }
 	}
 }
 

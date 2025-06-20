@@ -20,8 +20,8 @@ mod tests;
 use crate::{
 	context::Context,
 	menu_items::{
-		CreateDepartment, ListDepartments, LoadContext, MenuItem, NameCompany, PrintContext, Quit,
-		SaveContext, ShowDepartment,
+		CreateDepartment, CreateStaff, ListDepartments, ListStaff, LoadContext, MenuItem, NameCompany,
+		PrintContext, Quit, SaveContext, ShowDepartment,
 	},
 };
 
@@ -51,6 +51,8 @@ pub fn run(cli: Option<Cli>) -> Result<(), Box<dyn error::Error>> {
 		Box::new(ListDepartments::new()),
 		Box::new(CreateDepartment::new()),
 		Box::new(ShowDepartment()),
+		Box::new(ListStaff()),
+		Box::new(CreateStaff()),
 		Box::new(SaveContext()),
 		Box::new(LoadContext()),
 	];
@@ -129,7 +131,7 @@ fn display_menu(menu_items: &[Box<dyn MenuItem>]) -> Result<(), Box<dyn error::E
 fn get_menu_item_from_shortcut<'a>(
 	menu_items: &'a [Box<dyn MenuItem>],
 	shortcut: &'a str,
-) -> Option<&'a Box<dyn MenuItem>> {
+) -> Option<&'a dyn MenuItem> {
 	if shortcut.is_empty() {
 		return None;
 	}
@@ -139,5 +141,5 @@ fn get_menu_item_from_shortcut<'a>(
 		.filter(|mi| mi.shortcut().map_or("", |sc| sc) == shortcut)
 		.collect::<Vec<_>>()
 		.first()
-		.map(|bv| &**bv)
+		.map(|bv| &***bv)
 }
