@@ -1,4 +1,5 @@
 use chrono::NaiveDate;
+use regex::Regex;
 use std::{
 	error, fs,
 	io::{self, Write},
@@ -26,6 +27,7 @@ pub trait MenuItem {
 
 pub enum MenuItemInput {
 	String(String),
+	StringVec(Vec<String>),
 	DepartmentBuilder(DepartmentBuilder),
 	StaffBuilder(StaffBuilder),
 	None,
@@ -49,7 +51,12 @@ pub struct NameCompany {
 
 impl NameCompany {
 	pub fn new() -> Self {
-		Self { menuitem_txt: "Name the company".to_string(), shortcut: "n".to_string() }
+		Self { menuitem_txt: "Set the name and domain of the company".to_string(), shortcut: "n".to_string() }
+	}
+
+	fn validate_domain(domain: &str) -> bool {
+		let regex_domain = Regex::new(r"^([a-z][a-z0-9-]{1,62}\.)+[a-z]{2,6}$").unwrap();
+		regex_domain.is_match(domain)
 	}
 }
 
@@ -65,23 +72,50 @@ impl MenuItem for NameCompany {
 	fn execute_interactive(&self, ctx: &mut Context) -> Result<(), Box<dyn error::Error>> {
 		println!("What is the new name of the company?");
 
-		let mut input = String::new();
-		io::stdin().read_line(&mut input)?;
+		let mut name = String::new();
+		io::stdin().read_line(&mut name)?;
 
-		let _ = self.execute(ctx, MenuItemInput::String(input.trim().to_string()))?;
+		let mut domain = String::new();
+		loop {
+			println!("What is the domain name of the company?");
+			io::stdin().read_line(&mut domain)?;
+
+			domain = domain.trim().to_lowercase().to_string();
+			// check if valid, break
+			if NameCompany::validate_domain(&domain) {
+				break;
+			} else {
+				println!("Invalid domain: {}", domain);
+			}
+		}
+
+		let _ = self.execute(
+			ctx,
+			MenuItemInput::StringVec(vec![name.trim().to_string(), domain.trim().to_string()]),
+		)?;
 		Ok(())
 	}
 
 	fn execute<'a>(
 		&self,
 		ctx: &'a mut Context,
-		input: MenuItemInput,
+		params: MenuItemInput,
 	) -> Result<MenuItemOutput<'a>, Box<dyn error::Error>> {
-		let MenuItemInput::String(input) = input else {
-			Err(Box::new(ApplicationError("Unrecognized input".to_string())))?
+		// Set the company name
+		let MenuItemInput::StringVec(string_vec) = params else {
+			Err(Box::new(ApplicationError("Unrecognized params".to_string())))?
 		};
 
-		ctx.set_company_name(input.to_string());
+		let [ref name, ref domain] = string_vec[..] else {
+			Err(Box::new(ApplicationError("Invalid params".to_string())))?
+		};
+
+		if !NameCompany::validate_domain(domain) {
+			Err(Box::new(ApplicationError("Invalid domain".to_string())))?
+		}
+
+		ctx.set_company_name(name.to_string());
+		ctx.set_domain(domain.to_string());
 
 		Ok(MenuItemOutput::None)
 	}
@@ -138,7 +172,7 @@ impl MenuItem for ListDepartments {
 		ctx: &'a mut Context,
 		_input: MenuItemInput,
 	) -> Result<MenuItemOutput<'a>, Box<dyn error::Error>> {
-		let mut result = format!("{}\n", ctx.company_name());
+		let mut result = format!("{} ({})\n", ctx.company_name(), ctx.domain());
 
 		let dep_str = ctx
 			.departments()

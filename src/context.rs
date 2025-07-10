@@ -12,6 +12,8 @@ use crate::{
 pub struct Context {
 	#[getset(set = "pub")]
 	company_name: String,
+	#[getset(set = "pub")]
+	domain: String,
 	next_department_id: DepartmentId,
 	next_staff_id: StaffId,
 	departments: Vec<Department>,
@@ -22,6 +24,7 @@ impl Context {
 	pub fn new() -> Self {
 		Self {
 			company_name: "".to_string(),
+			domain: "".to_string(),
 			next_department_id: DepartmentId(0),
 			next_staff_id: StaffId(0),
 			departments: vec![],
